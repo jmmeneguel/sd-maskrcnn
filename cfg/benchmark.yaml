@@ -2,19 +2,19 @@ output_dir: benchmark_results
 save_conf_name: config.yaml
 
 model:
-  path: models/sd_maskrcnn.h5
+  path: /nfs/diskstation/projects/dex-net/segmentation/models/objs_ablation/depth_50k_newest20180913T0337/mask_rcnn_depth_50k_newest_0016.h5
   mode: inference
   settings:
     image_shape: [512, 512]
     image_channel_count: 3
-    mean_pixel: [128,128,128]
+    mean_pixel: [128, 128, 128]
     backbone: resnet35
     post_nms_rois_inference: 2000
     rpn_nms_threshold: 1.0
     detection_nms_threshold: 0.35
 
 dataset:
-  path: datasets/wisdom/wisdom-real/high-res/
+  path: /nfs/diskstation/projects/dex-net/segmentation/datasets/wisdom/wisdom-real/high-res/
   images: depth_ims
   masks: modal_segmasks
   indices: test_indices.npy
@@ -33,7 +33,7 @@ vis:
   show_class_pred: 0
 
   # GT vis settings
-  ground_truth: 1
+  ground_truth: 0
   show_bbox_gt: 0
   show_scores_gt: 0
   show_class_gt: 0

@@ -1,12 +1,12 @@
 model:
-  path: models/
+  path: /nfs/diskstation/projects/dex-net/segmentation/models/4_channel_test/
   weights: new     # new, last, coco, imagenet or custom path
   epochs: 20       # number of epochs to train for
   settings:
-    name: my_model
+    name: 4_channel_9_25
     image_shape: [512,512]
-    image_channel_count: 3
-    mean_pixel: [128, 128, 128]
+    image_channel_count: 4
+    mean_pixel: [128, 128, 128, 128]
     backbone: resnet35
     max_gt_instances: 20
     gpu_count: 1
@@ -14,7 +14,7 @@ model:
     learning_rate: 0.01
 
 dataset:
-  path: datasets/wisdom/wisdom-sim/
+  path: /nfs/diskstation/projects/dex-net/segmentation/datasets/wisdom/wisdom-sim/
   train_indices: train_indices.npy
   val_indices: test_indices.npy
   images: depth_ims
@@ -23,4 +23,4 @@ dataset:
 # name of the config file to save (within the dataset folder)
 # note that this will be overwritten between multiple runs so
 # you should name this uniquely for each run.
-save_conf_name: config_1e-2_e20_res35.yaml
+save_conf_name: config_1e-2_e20_res35_4c.yaml
