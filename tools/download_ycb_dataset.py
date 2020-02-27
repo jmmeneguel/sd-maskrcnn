@@ -6,7 +6,7 @@
 import os
 import sys
 import json
-from urllib.request import urlopen, Request
+from six.moves.urllib.request import urlopen, Request
 import shutil
 
 output_directory = "./datasets/objects/meshes/ycb"
