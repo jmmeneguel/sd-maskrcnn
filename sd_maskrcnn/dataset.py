@@ -56,7 +56,7 @@ class ImageDataset(Dataset):
         self.masks = config['dataset']['masks']
 
         self._channels = config['model']['settings']['image_channel_count']
-        super().__init__()
+        super(ImageDataset, self).__init__()
 
     def load(self, indices_file, augment=False):
 

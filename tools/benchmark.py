@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Copyright ©2019. The Regents of the University of California (Regents). All Rights Reserved.
 Permission to use, copy, modify, and distribute this software and its documentation for educational,
@@ -74,7 +75,7 @@ def benchmark(config):
                               model_dir=model_dir)
 
     # Load trained weights
-    print("Loading weights from ", config['model']['path'])
+    print("Loading weights from {}".format(config['model']['path']))
     model.load_weights(config['model']['path'], by_name=True)
 
     # Create dataset

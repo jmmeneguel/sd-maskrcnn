@@ -11,7 +11,7 @@ from mrcnn import model as modellib, utils as utilslib
 
 class SDMaskRCNNModel(object):
 
-    def __init__(self, path, mode, config):
+    def __init__(self, path, mode, config, weights=None):
         
         if not os.path.exists(path):
             raise ValueError('No model located at {}'.format(path))
@@ -22,51 +22,61 @@ class SDMaskRCNNModel(object):
         self.mode = mode
         self.config = config
 
-        image_shape = self.config['settings']['image_shape']
-        self.config['settings']['image_min_dim'] = min(image_shape)
-        self.config['settings']['image_max_dim'] = max(image_shape)
-        self._mconfig = MaskConfig(self.config['settings'])
+        image_shape = self.config['image_shape']
+        self.config['image_min_dim'] = min(image_shape)
+        self.config['image_max_dim'] = max(image_shape)
+
+        if self.mode == 'inference':
+            self.config['gpu_count'] = 1
+            self.config['images_per_gpu'] = 1
+        self._mconfig = MaskConfig(self.config)
         
         self._model = modellib.MaskRCNN(mode=self.mode, 
                                         config=self._mconfig,
                                         model_dir=self.path)
-
+        exclude_layers = []
         if self.mode == 'training':
-            exclude_layers = []
-            weights_path = self.config['weights']
         
             # Select weights file to load
-            if self.config['weights'].lower() == "coco":
-                weights_path = os.path.join(self.config['path'], 'mask_rcnn_coco.h5')
+            if weights.lower() == "coco":
+                weights = os.path.join(self.path, 'mask_rcnn_coco.h5')
                 # Download weights file
-                if not os.path.exists(weights_path):
-                    utilslib.download_trained_weights(weights_path)
-                if self.config['settings']['image_channel_count'] == 1:
+                if not os.path.exists(weights):
+                    utilslib.download_trained_weights(weights)
+                if self.config['image_channel_count'] == 1:
                     exclude_layers = ['conv1']
                 # Exclude the last layers because they require a matching
                 # number of classes
                 exclude_layers += ["mrcnn_class_logits", "mrcnn_bbox_fc", "mrcnn_bbox", "mrcnn_mask"]
-            elif self.config['weights'].lower() == "last":
+            elif weights.lower() == "last":
                 # Find last trained weights
-                weights_path = self._model.find_last()
-            elif self.config['weights'].lower() == "imagenet":
+                weights = self._model.find_last()
+            elif weights.lower() == "imagenet":
                 # Start from ImageNet trained weights
-                weights_path = self._model.get_imagenet_weights()
-                if self.config['settings']['image_channel_count'] == 1:
+                weights = self._model.get_imagenet_weights()
+                if self.config['image_channel_count'] == 1:
                     exclude_layers = ['conv1']
-        else:
-            weights_path = self.path
+        
+        elif self.mode == 'inference':
+            weights = self.path
 
         # Load weights
-        if weights_path != 'new':
-            print("Loading weights ", weights_path)
-            model.load_weights(weights_path, by_name=True, exclude=exclude_layers)
+        if weights is not None:
+            print("Loading weights from {}".format(weights))
+            self._model.load_weights(weights, by_name=True, exclude=exclude_layers)
         
     def detect(self, image, bin_mask=None, overlap_thresh=0.5):
 
         if self.mode != 'inference':
             print('Can only call detect in inference mode!')
             return None
+
+        image, window, scale, padding, crop = utilslib.resize_image(
+            image,
+            min_dim=self._mconfig.IMAGE_MIN_DIM,
+            min_scale=self._mconfig.IMAGE_MIN_SCALE,
+            max_dim=self._mconfig.IMAGE_MAX_DIM,
+            mode=self._mconfig.IMAGE_RESIZE_MODE)
 
         # Run detection
         r = self._model.detect([image], verbose=0)[0]
@@ -95,11 +105,14 @@ class SDMaskRCNNModel(object):
             r['scores'] = np.array([r['scores'][k] for k in range(num_detects)
                                        if k not in deleted_masks])
         
-        import pdb; pdb.set_trace()
         masks = np.stack([r['masks'][:,:,i] for i in range(r['masks'].shape[2])]) if np.any(r['masks']) else np.array([])
+        mask_info = {
+            'rois': r['rois'],
+            'scores': r['scores'],
+            'class_ids': r['class_ids']
+        }
 
-
-        return r
+        return masks, mask_info
 
     
     def detect_dataset(self, output_dir, dataset, bin_mask_dir=None, overlap_thresh=0.5):
