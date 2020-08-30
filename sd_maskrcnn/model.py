@@ -65,7 +65,7 @@ class SDMaskRCNNModel(object):
             print("Loading weights from {}".format(weights))
             self._model.load_weights(weights, by_name=True, exclude=exclude_layers)
         
-    def detect(self, image, bin_mask=None, overlap_thresh=0.5):
+    def detect(self, image, color_image=None, gt_mask=None, bin_mask=None, overlap_thresh=0.5):
 
         if self.mode != 'inference':
             print('Can only call detect in inference mode!')
@@ -86,6 +86,14 @@ class SDMaskRCNNModel(object):
         # Then, delete the mask, score, class id, and bbox corresponding
         # to each mask that is entirely bin pixels.
         if bin_mask is not None:
+            bin_mask, _, _, _, _ = utilslib.resize_image(
+                bin_mask,
+                min_dim=self._mconfig.IMAGE_MIN_DIM,
+                min_scale=self._mconfig.IMAGE_MIN_SCALE,
+                max_dim=self._mconfig.IMAGE_MAX_DIM,
+                mode=self._mconfig.IMAGE_RESIZE_MODE)
+
+            bin_mask = bin_mask.squeeze()
 
             deleted_masks = [] # which segmasks are gonna be tossed?
             num_detects = r['masks'].shape[2]
@@ -112,7 +120,27 @@ class SDMaskRCNNModel(object):
             'class_ids': r['class_ids']
         }
 
-        return masks, mask_info
+        if color_image is not None:
+            color_image, _, _, _, _ = utilslib.resize_image(
+                color_image,
+                min_dim=self._mconfig.IMAGE_MIN_DIM,
+                min_scale=self._mconfig.IMAGE_MIN_SCALE,
+                max_dim=self._mconfig.IMAGE_MAX_DIM,
+                mode=self._mconfig.IMAGE_RESIZE_MODE)
+            color_masks = np.repeat(masks[...,None], 3, axis=-1).astype(np.uint8)
+            for cm in color_masks:
+                cm[cm > 0] = color_image[cm > 0]
+            masks = color_masks
+        
+        if gt_mask is not None:
+            gt_mask, _, _, _, _ = utilslib.resize_image(
+                gt_mask,
+                min_dim=self._mconfig.IMAGE_MIN_DIM,
+                min_scale=self._mconfig.IMAGE_MIN_SCALE,
+                max_dim=self._mconfig.IMAGE_MAX_DIM,
+                mode=self._mconfig.IMAGE_RESIZE_MODE)
+
+        return masks, gt_mask, color_image, mask_info
 
     
     def detect_dataset(self, output_dir, dataset, bin_mask_dir=None, overlap_thresh=0.5):
