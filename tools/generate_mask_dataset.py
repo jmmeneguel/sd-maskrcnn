@@ -38,7 +38,7 @@ from perception import DepthImage, GrayscaleImage, BinaryImage, ColorImage
 
 # from sd_maskrcnn.envs import BinHeapEnv
 # from sd_maskrcnn.envs.constants import *
-import * from '../sd-maskrcnn/envs'
+from '../sd-maskrcnn/envs' import *
 
 SEED = 744
 
