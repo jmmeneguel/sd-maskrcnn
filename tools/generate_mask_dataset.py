@@ -36,8 +36,9 @@ from autolab_core import TensorDataset, YamlConfig, Logger
 import autolab_core.utils as utils
 from perception import DepthImage, GrayscaleImage, BinaryImage, ColorImage
 
-from sd_maskrcnn.envs import BinHeapEnv
-from sd_maskrcnn.envs.constants import *
+# from sd_maskrcnn.envs import BinHeapEnv
+# from sd_maskrcnn.envs.constants import *
+import * from '../sd-maskrcnn/envs'
 
 SEED = 744
 
