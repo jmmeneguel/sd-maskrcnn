@@ -38,7 +38,8 @@ import skimage.io as io
 from copy import copy
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
+# from keras.backend.tensorflow_backend import set_session
+from tensorflow.python.keras.backend import get_session
 
 from autolab_core import YamlConfig
 
